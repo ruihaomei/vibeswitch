@@ -9,6 +9,8 @@
 
 <p align="center"><a href="README.md">English</a> · <a href="AGENTS.md">给 AI Agent 的安装指南</a> · <a href="https://buildwithclaude.com/themes">更多主题</a></p>
 
+<p align="center"><img src="docs/demo.gif" alt="12 秒演示：/vibe 切换场景，画廊预览 Koi Mosaic" width="800"><br><sub>12 秒演示 · <a href="https://ruihaomei.github.io/vibeswitch/#demo">带音效观看</a></sub></p>
+
 ---
 
 ## ⚡ 大约一分钟装好

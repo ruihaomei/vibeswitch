@@ -17,6 +17,8 @@
 
 <p align="center"><a href="https://ruihaomei.github.io/vibeswitch/">Website</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="AGENTS.md">Guide for AI agents</a> · <a href="https://buildwithclaude.com/themes">More themes</a></p>
 
+<p align="center"><img src="docs/demo.gif" alt="12-second demo: /vibe switches the scene, the gallery previews Koi Mosaic" width="800"><br><sub>12-second demo · <a href="https://ruihaomei.github.io/vibeswitch/#demo">watch it with sound</a></sub></p>
+
 ---
 
 ## ⚡ Install in about a minute
