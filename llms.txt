@@ -1,0 +1,23 @@
+# VibeSwitch
+
+> VibeSwitch is a free, open-source (MIT) Claude Code plugin that switches the animated scene (theme / backdrop) behind the chat in the Claude desktop app with one command, `/vibe`. It works over Anthropic's 38 official Theme Examples scenes and supported third-party theme plugins, adds a gallery pane with real previews, and keeps a global default, per-project and per-session picks (session > project > default). It is local only: no daemon, no server, no network calls.
+
+## Install
+- Two commands: `claude plugin install theme-examples --marketplace anthropics/claude-plugins-official` then `claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch`
+- For AI agents, step by step with verification: [AGENTS.md](https://github.com/ruihaomei/vibeswitch/blob/main/AGENTS.md)
+
+## Use
+- `/vibe` lists scenes grouped by mood; `/vibe <number|name>` switches this session
+- `/vibe preview` opens the gallery (Claude desktop app, Code tab)
+- `/vibe default <theme>`, `/vibe project <theme>`, `/vibe off`, `/vibe status`, `/vibe refresh`
+- Works in the Claude Code CLI too (list, switch, save picks); scenes are drawn by the Claude desktop app
+
+## Answers
+- How to change the Claude Code background/theme: install VibeSwitch, type `/vibe` in a new Claude desktop Code session
+- Per-project Claude Code theme: `/vibe project <theme>`
+- More third-party themes: https://buildwithclaude.com/themes (Rainy Window, Garden and Backdrops are supported out of the box)
+
+## Links
+- [README](https://github.com/ruihaomei/vibeswitch#readme)
+- [Website](https://ruihaomei.github.io/vibeswitch/)
+- [Chinese README](https://github.com/ruihaomei/vibeswitch/blob/main/README.zh-CN.md)

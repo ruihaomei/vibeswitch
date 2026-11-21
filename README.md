@@ -4,7 +4,8 @@
 
 <p align="center">
   <b>Type <code>/vibe</code>. Your Claude Code window gets a new living scene.</b><br>
-  38 official animated scenes · a gallery with real previews · default, per-project and per-session picks · all local
+  38 official animated scenes · a gallery with real previews · default, per-project and per-session picks · all local<br>
+  Works in <b>Claude Desktop</b> (scenes + gallery) and the <b>Claude Code CLI</b> (list, switch, save picks)
 </p>
 
 <p align="center">
@@ -14,7 +15,7 @@
   <a href="https://github.com/ruihaomei/vibeswitch/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/ruihaomei/vibeswitch?style=for-the-badge&color=f2c94c"></a>
 </p>
 
-<p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="AGENTS.md">Guide for AI agents</a> · <a href="https://buildwithclaude.com/themes">More themes</a></p>
+<p align="center"><a href="https://ruihaomei.github.io/vibeswitch/">Website</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="AGENTS.md">Guide for AI agents</a> · <a href="https://buildwithclaude.com/themes">More themes</a></p>
 
 ---
 
@@ -105,6 +106,21 @@ VibeSwitch already knows these three and adds them to `/vibe` and the gallery as
 Run `/vibe refresh` after installing. A theme plugin VibeSwitch doesn't know yet keeps working through its own command; adding it to `/vibe` is one entry in [`hooks/registry.ts`](hooks/registry.ts) (PRs welcome).
 
 ## FAQ
+
+<details><summary><b>How do I change the background or theme of Claude Code?</b></summary>
+
+Install VibeSwitch and Anthropic's official scenes (two commands above), open a new session in the Claude desktop app's Code tab and type `/vibe`. Pick a number, or `/vibe preview` to choose from a gallery.
+</details>
+
+<details><summary><b>Can each project have its own Claude Code theme?</b></summary>
+
+Yes: `/vibe project koi mosaic` in that project. Other projects keep the global default (`/vibe default <theme>`), and `/vibe <theme>` changes only the current session.
+</details>
+
+<details><summary><b>Does it work in the Claude Code CLI (terminal)?</b></summary>
+
+Yes. `/vibe`, `/vibe status`, `default`, `project` and `session` all work in the terminal and save your picks. The animated scenes and the gallery pane are drawn by the Claude desktop app, so that's where you see them.
+</details>
 
 <details><summary><b>I typed <code>/vibe</code> and nothing changed.</b></summary>
 

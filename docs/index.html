@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeSwitch: switch the Claude Code theme with one command</title>
+<meta name="description" content="VibeSwitch is a free, open-source Claude Code plugin: type /vibe to switch the animated scene behind your chat in the Claude desktop app. 38 official scenes, a gallery with real previews, per-project and per-session themes.">
+<meta name="keywords" content="Claude Code theme, Claude Code background, Claude desktop theme, Claude Code plugin, theme switcher, backdrop, vibe coding">
+<link rel="canonical" href="https://ruihaomei.github.io/vibeswitch/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VibeSwitch: type /vibe, change the scene behind Claude Code">
+<meta property="og:description" content="38 official animated scenes, a gallery with real previews, default / project / session picks. Local and lightweight.">
+<meta property="og:url" content="https://ruihaomei.github.io/vibeswitch/">
+<meta property="og:image" content="https://ruihaomei.github.io/vibeswitch/hero.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ruihaomei.github.io/vibeswitch/hero.png">
+<link rel="alternate" type="text/plain" href="llms.txt" title="llms.txt">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"SoftwareApplication","name":"VibeSwitch","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows",
+ "description":"Claude Code plugin that switches the animated scene (theme) behind the chat in the Claude desktop app with one command, /vibe.",
+ "url":"https://ruihaomei.github.io/vibeswitch/","downloadUrl":"https://github.com/ruihaomei/vibeswitch","license":"https://opensource.org/licenses/MIT",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"ruihaomei","url":"https://github.com/ruihaomei"}},
+{"@type":"FAQPage","mainEntity":[
+ {"@type":"Question","name":"How do I change the background or theme of Claude Code?","acceptedAnswer":{"@type":"Answer","text":"Install VibeSwitch and Anthropic's official theme-examples plugin, open a new session in the Claude desktop app's Code tab and type /vibe, then pick a scene. /vibe preview opens a gallery."}},
+ {"@type":"Question","name":"Can each project have its own Claude Code theme?","acceptedAnswer":{"@type":"Answer","text":"Yes. Run /vibe project <theme> inside that project. The global default (/vibe default <theme>) applies elsewhere, and /vibe <theme> changes only the current session."}},
+ {"@type":"Question","name":"Does VibeSwitch work in the Claude Code CLI?","acceptedAnswer":{"@type":"Answer","text":"Yes. /vibe lists, switches and saves picks in the terminal; the animated scenes and the gallery are drawn by the Claude desktop app."}}
+]}]}
+</script>
+<style>
+:root{--bg:#0d0c12;--fg:#f4f1fa;--mut:#b9b4c7;--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);--acc:#ff9d76;--acc2:#a993ff}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#fbf8f4;--fg:#1e1a26;--mut:#5d5768;--card:rgba(30,20,50,.04);--line:rgba(30,20,50,.12)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif}
+a{color:var(--acc)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header{position:relative;overflow:hidden}
+header img.hero{width:100%;display:block;aspect-ratio:2/1;object-fit:cover}
+nav{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;padding:14px 16px;font-size:15px}
+nav a{color:var(--mut);text-decoration:none} nav a:hover{color:var(--fg)}
+h1{font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-.03em;margin:36px 0 12px;text-align:center}
+.lead{text-align:center;color:var(--mut);font-size:clamp(17px,2.4vw,21px);max-width:760px;margin:0 auto 26px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:650;text-decoration:none;border:1px solid var(--line);color:var(--fg);background:var(--card);cursor:pointer;font-size:16px}
+.btn.primary{background:linear-gradient(92deg,var(--acc),#ff7a93);color:#1a1020;border:0}
+section{margin:56px 0}
+h2{font-size:clamp(24px,3.4vw,32px);letter-spacing:-.02em;margin:0 0 16px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px}
+.code{position:relative;font:14.5px/1.55 ui-monospace,Menlo,monospace;background:rgba(0,0,0,.35);color:#f3efe9;border-radius:12px;padding:14px 92px 14px 16px;margin:10px 0;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.code button{position:absolute;right:10px;top:10px;border:0;border-radius:8px;padding:6px 10px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;font:600 13px -apple-system,sans-serif}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.step b{display:block;font-size:15px;color:var(--acc);margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.feat h3{margin:0 0 6px;font-size:18px} .feat p{margin:0;color:var(--mut);font-size:15.5px}
+img.wide{width:100%;border-radius:16px;display:block;border:1px solid var(--line)}
+details{border-bottom:1px solid var(--line);padding:12px 0} summary{cursor:pointer;font-weight:650}
+footer{color:var(--mut);font-size:14px;text-align:center;padding:40px 16px 60px}
+</style>
+</head>
+<body>
+<header><img class="hero" src="hero.png" alt="VibeSwitch: one command to change the living scene behind your Claude Code chat"></header>
+<nav><a href="#install">Install</a><a href="#scenes">Scenes</a><a href="#how">How it works</a><a href="#faq">FAQ</a><a href="https://github.com/ruihaomei/vibeswitch">GitHub</a><a href="https://github.com/ruihaomei/vibeswitch/blob/main/README.zh-CN.md">中文</a></nav>
+<main class="wrap">
+<h1>Type <code>/vibe</code>. Change the scene behind Claude Code.</h1>
+<p class="lead">A free, open-source plugin for the Claude desktop app and Claude Code CLI: 38 official animated scenes, a gallery with real previews, and a scene per project. Local, lightweight, about a minute to set up.</p>
+<div class="cta">
+  <a class="btn primary" href="#install">⚡ Install in about a minute</a>
+  <a class="btn" href="https://github.com/ruihaomei/vibeswitch">⭐ Star on GitHub</a>
+</div>
+
+<img class="wide" src="reel.gif" alt="A few of the official scenes, animated" loading="lazy">
+
+<section id="install">
+  <h2>Install</h2>
+  <div class="box">
+    <strong>Let your agent do it.</strong> Paste this into Claude Code (or any coding agent):
+    <div class="code" id="p">Install the VibeSwitch plugin for Claude Code by following https://github.com/ruihaomei/vibeswitch/blob/main/AGENTS.md, then tell me how to start using it.<button data-copy="p">Copy</button></div>
+    <strong>Or run two commands:</strong>
+    <div class="code" id="c1">claude plugin install theme-examples --marketplace anthropics/claude-plugins-official<button data-copy="c1">Copy</button></div>
+    <div class="code" id="c2">claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch<button data-copy="c2">Copy</button></div>
+  </div>
+  <div class="steps" style="margin-top:14px">
+    <div class="box step"><b>1 · Install</b>Two commands, or one line to your agent.</div>
+    <div class="box step"><b>2 · Open</b>Claude desktop app → Code tab → new session.</div>
+    <div class="box step"><b>3 · Vibe</b>Type <code>/vibe</code> and pick a number.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Why people use it</h2>
+  <div class="grid">
+    <div class="box feat"><h3>🎯 One command</h3><p><code>/vibe 11</code> or <code>/vibe night reef</code>. No per-plugin commands to remember.</p></div>
+    <div class="box feat"><h3>🖼 See before you pick</h3><p><code>/vibe preview</code> opens a gallery with each scene's real artwork and one-click Preview / Default / Project.</p></div>
+    <div class="box feat"><h3>🗂 A scene per project</h3><p>Session beats project beats default. Calm paper at work, a koi pond for the side project.</p></div>
+    <div class="box feat"><h3>🪶 Lightweight</h3><p>No daemon, no server, no network. One small config file you can read.</p></div>
+  </div>
+</section>
+
+<section id="scenes">
+  <h2>38 official scenes, ready on install</h2>
+  <img class="wide" src="scenes.webp" alt="All 38 official theme-examples scenes" loading="lazy">
+  <p style="color:var(--mut)">Want more? Browse community themes at <a href="https://buildwithclaude.com/themes">buildwithclaude.com/themes</a>. Rainy Window, Garden and Backdrops join <code>/vibe</code> automatically once installed.</p>
+</section>
+
+<section id="how">
+  <h2>How it decides what you see</h2>
+  <div class="box"><p style="margin:0"><b>Session pick</b> (<code>/vibe night reef</code>) → beats → <b>Project pick</b> (<code>/vibe project koi mosaic</code>) → beats → <b>Global default</b> (<code>/vibe default honu lagoon</code>). <code>inherit</code> removes a pick; <code>/vibe off</code> shows no scene.</p></div>
+  <img class="wide" src="terminal.webp" alt="Real /vibe output in Claude Code" loading="lazy" style="margin-top:14px;max-width:640px;margin-left:auto;margin-right:auto">
+</section>
+
+<section id="faq">
+  <h2>FAQ</h2>
+  <details><summary>How do I change the background or theme of Claude Code?</summary><p>Install VibeSwitch and the official scenes, open a new session in the Claude desktop app's Code tab and type <code>/vibe</code>.</p></details>
+  <details><summary>Can each project have its own Claude Code theme?</summary><p>Yes: <code>/vibe project &lt;theme&gt;</code> in that project.</p></details>
+  <details><summary>Does it work in the Claude Code CLI?</summary><p>Yes. Listing, switching and saving picks work in the terminal; the scenes and the gallery are drawn by the Claude desktop app.</p></details>
+  <details><summary>Does it slow anything down or phone home?</summary><p>No. It runs when a session starts or when you use <code>/vibe</code>, and makes no network calls.</p></details>
+</section>
+</main>
+<footer>
+  MIT © ruihaomei · Scenes: Anthropic's <a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples">theme-examples</a> (Apache-2.0) · <a href="llms.txt">llms.txt</a><br>
+  If VibeSwitch made your workspace nicer, a <a href="https://github.com/ruihaomei/vibeswitch">⭐ on GitHub</a> helps others find it.
+</footer>
+<script>
+document.querySelectorAll('button[data-copy]').forEach(b=>b.addEventListener('click',()=>{
+  const el=document.getElementById(b.dataset.copy); const t=el.firstChild.textContent.trim();
+  navigator.clipboard.writeText(t).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1500)}).catch(()=>{});
+}));
+</script>
+</body>
+</html>
