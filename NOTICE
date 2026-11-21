@@ -1,0 +1,12 @@
+VibeSwitch
+Copyright (c) 2026 ruihaomei. Code licensed under the MIT License (LICENSE).
+
+This repository includes small still images (assets/thumbs/*.webp and docs/*)
+rendered from the backdrop scenes of Anthropic's theme-examples plugin
+(https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples),
+Copyright Anthropic, licensed under the Apache License 2.0
+(assets/thumbs/LICENSE-theme-examples.txt). They were changed only by capturing a
+single frame (or a few frames for the animated previews) and scaling it down.
+
+VibeSwitch does not include artwork from third-party theme plugins. Where such a
+plugin is installed, its own previews are read in place on the user's machine.

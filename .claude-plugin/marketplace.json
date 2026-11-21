@@ -1,0 +1,5 @@
+{
+  "name": "vibeswitch",
+  "owner": { "name": "ruihaomei" },
+  "plugins": [{ "name": "vibeswitch", "source": "./", "description": "One command to switch the scene behind your Claude Code desktop chat." }]
+}
