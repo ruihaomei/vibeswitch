@@ -10,3 +10,6 @@ single frame (or a few frames for the animated previews) and scaling it down.
 
 VibeSwitch does not include artwork from third-party theme plugins. Where such a
 plugin is installed, its own previews are read in place on the user's machine.
+
+The website in docs/ is built with taste-skill (https://github.com/Leonxlnx/taste-skill),
+MIT License; its kit files under docs/assets keep that licence (docs/assets/LICENSE-taste-skill.txt).

@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="#-install-in-about-a-minute"><img alt="Install in 1 minute" src="https://img.shields.io/badge/install-~1_minute-ff9d76?style=for-the-badge"></a>
-  <a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples"><img alt="38 official scenes" src="https://img.shields.io/badge/scenes-38_official-8a7dff?style=for-the-badge"></a>
+  <a href="https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples"><img alt="38 official scenes" src="https://img.shields.io/badge/scenes-38_official-1f2de6?style=for-the-badge"></a>
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-3fb950?style=for-the-badge"></a>
   <a href="https://github.com/ruihaomei/vibeswitch/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/ruihaomei/vibeswitch?style=for-the-badge&color=f2c94c"></a>
 </p>
