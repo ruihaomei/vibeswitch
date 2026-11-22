@@ -51,8 +51,9 @@ It should print themes grouped as "Light & paper", "Night & dark" and "Interacti
 >
 > 1. Open the **Claude desktop app → Code tab** and start a **new session** (sessions that were already open
 >    won't see it).
-> 2. Type **`/vibe`** and pick a number, or **`/vibe preview`** to browse the gallery with previews.
-> 3. Like one? **`/vibe default <name>`** keeps it for every session; **`/vibe project <name>`** for this project only.
+> 2. Type **`/vibe`**: a gallery opens beside the chat. Click **Preview** on any picture; **Default** keeps it for
+>    every session, **Project** for this folder.
+> 3. Or skip the commands and just ask Claude, for example "switch to something dark and calm".
 >
 > More themes: https://buildwithclaude.com/themes · Help: https://github.com/ruihaomei/vibeswitch
 

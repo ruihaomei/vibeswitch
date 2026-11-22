@@ -19,6 +19,7 @@ import type { CommandInfo, EngineInterface, Register } from 'claude-code'
 import { CARD, forgetArtwork, loadArtwork, peekArtwork } from './artwork'
 import { mayDraw, NONE, providerKeyOfPlugin } from './gate'
 import { previewSvg } from './preview'
+import { vibeSuggestions } from './suggest'
 import { CATEGORIES, PROVIDERS, THEMES, type Category, type Provider, type Theme } from './registry'
 
 const COMMAND = 'vibe'
@@ -27,6 +28,9 @@ const GALLERY = 'vibeswitch-gallery'
 /** The gallery pane's filter, and a counter bumped after a pick so the pane redraws its marks. */
 const gallery = atom({ plugin: 'vibeswitch', key: 'gallery' } as const, { filter: 'all', tick: 0 }, { shape: 'gallery-1' })
 const INITIAL_DEFAULT = 'honu-lagoon'
+/** The tool Claude calls when the person asks for a scene in their own words (listed as mcp__vibeswitch__vibe). */
+const TOOL = 'vibe'
+const ASK = 'Or just ask Claude in your own words, e.g. "switch to something dark and calm".'
 
 type Config = { default: string; projects: Record<string, string>; providers?: string[] }
 type Layer = 'session' | 'project' | 'default'
@@ -39,6 +43,8 @@ let applyFailed = false
 let sessionOverride: string | undefined
 /** The scene a registered provider set and the gate let through in this session ('' for none yet). */
 let standingScene = ''
+/** True once this machine's config was made in this session: the first run, when a one-time hint is shown. */
+let firstRun = false
 
 // ---------- config ----------
 
@@ -52,6 +58,7 @@ async function readConfig($: EngineInterface): Promise<Config> {
   if (!(await $.fs.exists(path))) {
     const fresh: Config = { default: INITIAL_DEFAULT, projects: {} }
     await writeConfig($, fresh)
+    firstRun = true
     return fresh
   }
   const raw: unknown = JSON.parse(await $.fs.read(path))
@@ -188,6 +195,7 @@ async function menuText($: EngineInterface, header: string, withBlurbs: boolean)
     '       /vibe default <number|name>  (all sessions)',
     '       /vibe project <number|name>  (this project)',
     '       /vibe preview  (gallery pane with previews)  ·  off  ·  status  ·  refresh',
+    ASK,
   )
   return lines.join('\n')
 }
@@ -281,8 +289,25 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: COMMAND,
-      description: 'Switch theme: menu, list, status, default|project|session <theme|inherit|none>, off, refresh',
-      argumentHint: '[<n|theme> | list | status | default|project|session <theme|inherit|none> | off | refresh]',
+      description: 'Pick the scene behind the chat: opens a gallery with pictures. Or ask Claude in your own words.',
+      argumentHint: '[scene | status | default|project|session <scene> | off | list | refresh]',
+    })
+    await $.tool.register({
+      name: TOOL,
+      description: 'Change or check the animated scene (theme, background, backdrop, wallpaper) behind the chat in the Claude desktop app, through the VibeSwitch plugin. '
+        + 'Use it when the person asks for a different background, theme, scene or mood, or asks what is showing. '
+        + "action 'list' returns every installed scene with its mood and a one-line description: choose from it when the person describes a mood rather than a name. "
+        + "action 'set' takes theme (an id, name or number from the list) and scope: 'session' (this session only, the default), 'project' (this folder) or 'default' (every session); "
+        + "use 'project' or 'default' only when the person asks to keep it. 'off' shows no scene in this session, 'status' says what shows and why, 'gallery' opens the picture gallery beside the chat.",
+      inputSchema: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['list', 'set', 'status', 'off', 'gallery'] },
+          theme: { type: 'string', maxLength: 80, description: "For 'set': a scene id, name or number from 'list'." },
+          scope: { type: 'string', enum: ['session', 'project', 'default'], description: "For 'set': where the pick is kept; 'session' unless the person asks otherwise." },
+        },
+        required: ['action'],
+      },
     })
     resolved = undefined
     applyFailed = false
@@ -295,6 +320,10 @@ export const register: Register = on => {
       const problem = await apply($, now.target).catch(err => String(err))
       applyFailed = problem !== undefined
       if (problem !== undefined) $.ui.log(`VibeSwitch: ${problem}`, { to: 'debug' })
+    }
+    if (firstRun) {
+      firstRun = false
+      $.ui.toast(`VibeSwitch is ready: type /vibe to browse scenes with pictures. ${ASK}`)
     }
     return result
   })
@@ -328,7 +357,18 @@ export const register: Register = on => {
     const head = (words[0] ?? '').toLowerCase()
     const rest = words.slice(1).join(' ')
 
-    if (head === '') return { text: await menuText($, 'Themes:', false) }
+    if (head === '') {
+      if (!(await $.session.surfaces()).includes('desktop')) return { text: await menuText($, 'Themes:', false) }
+      const now = await resolve($)
+      await openGallery($)
+      return {
+        text: [
+          'Opening the gallery beside the chat: pick a picture, then Preview (this session), Default (every session) or Project (this folder).',
+          now === undefined ? '' : `Now showing: ${titleOf(now.target)} (from ${now.from}).`,
+          `${ASK} /vibe list prints the numbered list.`,
+        ].filter(Boolean).join('\n'),
+      }
+    }
     if (head === 'list') return { text: `${await menuText($, 'Available themes:', true)}\n\n${await openGallery($)}` }
     if (head === 'preview' || head === 'gallery') return { text: await openGallery($) }
     if (head === 'status') return { text: await statusText($) }
@@ -351,6 +391,38 @@ export const register: Register = on => {
     return { text: await setLayer($, 'session', value) }
   }).catch(() => ({ text: 'VibeSwitch hit an error; /vibe status shows the config path.' }))
 
+  // Suggestions after `/vibe ` in the prompt box: actions, then scenes by name or mood word.
+  on('prompt.autocomplete', async ($, e, next) => {
+    if (!/^\s*\/vibe\s/i.test(e.text)) return next(e)
+    const own = vibeSuggestions(await available($), e.text.slice(0, e.start), e.token)
+    const base = await next(e)
+    return own === undefined || own.length === 0 ? base : { suggestions: [...base.suggestions, ...own] }
+  }).catch(($, e, next) => next(e))
+
+  // The same choices for Claude, when the person asks in their own words.
+  on('tool.call', { tool: 'mcp__vibeswitch__vibe' }, async ($, e) => {
+    const input = e.input as { action?: unknown; theme?: unknown; scope?: unknown }
+    const action = typeof input.action === 'string' ? input.action : ''
+    if (action === 'status') return { result: await statusText($) }
+    if (action === 'gallery') return { result: await openGallery($) }
+    if (action === 'off') return { result: await setLayer($, 'session', NONE) }
+    if (action === 'list') {
+      const list = await available($)
+      const label = (t: Theme) => CATEGORIES.find(c => c.id === t.category)?.title ?? t.category
+      return { result: [`${list.length} scenes (number. id: title [mood, window]: description):`,
+        ...list.map((t, i) => `${i + 1}. ${t.id}: ${t.title} [${label(t)}, ${t.mode}${t.sound === true ? ', sound' : ''}]: ${t.blurb}`)].join('\n') }
+    }
+    if (action === 'set') {
+      const scope: Layer = input.scope === 'project' || input.scope === 'default' ? input.scope : 'session'
+      const theme = typeof input.theme === 'string' ? input.theme.slice(0, 80) : ''
+      const value = theme === '' ? undefined : await parseValue($, theme)
+      if (value === undefined) return { result: `No scene "${theme}". Call action 'list' for the ids.`, isError: true as const }
+      if (scope === 'default' && value === '') return { result: 'The default needs a scene or none.', isError: true as const }
+      return { result: await setLayer($, scope, value) }
+    }
+    return { result: "Unknown action: use list, set, status, off or gallery.", isError: true as const }
+  }).catch(($, e, next) => next(e))
+
   // The gallery: one row per theme with a drawn preview card, grouped and filterable,
   // and buttons that apply it to this session (a live preview), the project or the default.
   on('ui.render', { component: 'Pane', requestId: GALLERY }, async ($, e) => {
@@ -366,6 +438,18 @@ export const register: Register = on => {
         .catch(err => $.ui.toast(`VibeSwitch: ${String(err)}`))
     }
     const setFilter = (filter: string) => () => { void update($, gallery, g => ({ ...g, filter })) }
+    // A scene at random from the ones in view, not the one showing.
+    const surprise = () => {
+      const pool = list.filter(t => (view.filter === 'all' || t.category === view.filter) && t.id !== now?.target)
+      const t = pool[Math.floor(Math.random() * pool.length)]
+      if (t !== undefined) pick('session', t.id)()
+    }
+    const refreshPress = () => {
+      forgetArtwork()
+      void refresh($)
+        .then(text => { $.ui.toast(`VibeSwitch: ${text.split('\n')[0] ?? ''}`); return update($, gallery, g => ({ ...g, tick: g.tick + 1 })) })
+        .catch(err => $.ui.toast(`VibeSwitch: ${String(err)}`))
+    }
     const numbered = list.map((t, i) => ({ t, n: i + 1 }))
     const shown = CATEGORIES.filter(c => view.filter === 'all' || view.filter === c.id)
     // Draws at once with the pictures already read (color cards for the rest), then reads the shown categories'
@@ -393,7 +477,10 @@ export const register: Register = on => {
           ))}
           <Button key="inherit" label="Undo session pick" onPress={pick('session', '')} />
           <Button key="none" label="Original look" onPress={pick('session', NONE)} />
+          <Button key="surprise" label="Surprise me" onPress={surprise} />
+          <Button key="refresh" label="Refresh" dimColor onPress={refreshPress} />
         </Box>
+        <Text dimColor>Preview: this session · Default: every session · Project: this folder. {ASK}</Text>
         {shown.map(cat => {
           const rows = numbered.filter(x => x.t.category === (cat.id as Category))
           if (rows.length === 0) return <Box key={`c-${cat.id}`} />

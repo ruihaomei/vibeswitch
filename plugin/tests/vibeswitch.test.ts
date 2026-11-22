@@ -2,12 +2,13 @@ import { expect, test } from 'claude-code/testing'
 
 import { mayDraw, providerKeyOfPlugin } from '../hooks/gate'
 import { THEMES } from '../hooks/registry'
+import { vibeSuggestions } from '../hooks/suggest'
 
 const CONFIG = '/home/t/.config/vibeswitch/config.json'
 
 // A stand-in engine: a file system in memory, the theme plugins' commands, and a log of what was set.
 // A key starting with '*' matches any path ending in the rest (for files under the plugin's own folder).
-function engine(on: any, files: Record<string, string>, log: { sets: string[]; runs: string[]; clears: number }, reads: string[] = [], commands?: object[]) {
+function engine(on: any, files: Record<string, string>, log: { sets: string[]; runs: string[]; clears: number; opened?: string[] }, reads: string[] = [], commands?: object[], surfaces: string[] = ['terminal']) {
   const key = (path: string) => (path in files ? path : Object.keys(files).find(k => k.startsWith('*') && path.endsWith(k.slice(1))))
   const at = (path: string) => {
     const k = key(path)
@@ -26,6 +27,8 @@ function engine(on: any, files: Record<string, string>, log: { sets: string[]; r
     return { value: undefined }
   })
   on('session.root', () => ({ value: '/proj/a' }))
+  on('session.surfaces', () => ({ value: surfaces }))
+  on('tool.register', () => ({ value: undefined }))
   on('command.register', () => ({ value: { command: 'vibe' } }))
   on('command.list', () => ({
     value: commands ?? [
@@ -48,7 +51,7 @@ function engine(on: any, files: Record<string, string>, log: { sets: string[]; r
     return { value: { isDrawn: false, reason: 'cleared' } }
   })
   on('clock.after', () => ({ value: undefined })) // timers fire at once here
-  on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('ui.open', (_: any, e: any) => { log.opened?.push(e.id); return { value: { isPlaced: true } } })
   on('ui.toast', () => ({ value: undefined }))
   on('session.start', (_: any, e: any) => ({ cwd: e.cwd }))
 }
@@ -247,4 +250,52 @@ test('nothing VibeSwitch does starts a process', async ($, on) => {
   for (const args of ['', 'list', 'refresh', 'preview', 'status', 'night reef', 'default koi mosaic', 'project garden', 'off']) await run($, args)
   await new Promise(r => (globalThis as any).setTimeout(r, 1100))
   expect(spawned).toEqual([])
+})
+
+test('typing after /vibe suggests actions, then scenes by name or mood word', () => {
+  const texts = (before: string, token: string) => (vibeSuggestions(THEMES, before, token) ?? []).map(x => x.text)
+  expect(vibeSuggestions(THEMES, 'hello ', 'pr')).toBeUndefined()
+  expect(texts('/vibe ', 'pr').slice(0, 2)).toEqual(['preview', 'project'])
+  expect(texts('/vibe ', 'rain')[0]).toBe('rainy-window')
+  expect(texts('/vibe ', 'night')).toContain('night-reef')
+  expect(texts('/vibe ', 'koi')).toEqual(['koi-mosaic', 'koi-pond', 'koi-pond-night'])
+  expect(texts('/vibe default ', 'n')[0]).toBe('none')
+  expect(texts('/vibe project ', 'in')[0]).toBe('inherit')
+  expect(texts('/vibe default ', 'honu')).toEqual(['honu-lagoon'])
+  expect(texts('/vibe night ', 'reef')).toEqual([])
+  expect(texts('/vibe ', 'p').length).toBeLessThanOrEqual(8)
+})
+
+test('/vibe alone opens the gallery in the desktop app and still lists in a terminal', async ($, on) => {
+  const files: Record<string, string> = {}
+  const opened: string[] = []
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0, opened }
+  engine(on, files, log, [], undefined, ['desktop'])
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  const text = await run($, '')
+  expect(text).toContain('Opening the gallery')
+  expect(text).toContain('Now showing: Honu Lagoon (from default)')
+  expect(opened).toEqual(['vibeswitch-gallery'])
+  expect(await run($, 'list')).toContain('12. Honu Lagoon')
+})
+
+test('Claude can list and set scenes through the tool, session-only unless asked', async ($, on) => {
+  const files: Record<string, string> = {}
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
+  engine(on, files, log)
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  const call = async (input: object) => {
+    const out: any = await $.tool.call({ tool: 'mcp__vibeswitch__vibe', input } as any)
+    await new Promise(r => (globalThis as any).setTimeout(r, 30))
+    return out
+  }
+  const list = await call({ action: 'list' })
+  expect(String(list.result)).toContain('night-reef: Night Reef [Night & dark, dark]')
+  expect(String((await call({ action: 'set', theme: 'night reef' })).result)).toContain('This session: Night Reef')
+  expect(log.runs.at(-1)).toBe('/custom-theme night-reef session')
+  expect(config(files).default).toBe('honu-lagoon')
+  await call({ action: 'set', theme: 'koi-mosaic', scope: 'default' })
+  expect(config(files).default).toBe('koi-mosaic')
+  const bad = await call({ action: 'set', theme: 'nope' })
+  expect(bad.isError).toBe(true)
 })

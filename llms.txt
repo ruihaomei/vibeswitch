@@ -7,7 +7,9 @@
 - For AI agents, step by step with verification: [AGENTS.md](https://github.com/ruihaomei/vibeswitch/blob/main/AGENTS.md)
 
 ## Use
-- `/vibe` lists scenes grouped by mood; `/vibe <number|name>` switches this session
+- `/vibe` opens the gallery in the desktop app (a grouped list in a terminal); `/vibe <number|name>` switches this session
+- No commands needed: ask Claude in words ("something dark and calm"); VibeSwitch adds a `vibe` tool Claude uses for this
+- After `/vibe ` the prompt box suggests actions and scenes, mood words included
 - `/vibe preview` opens the gallery (Claude desktop app, Code tab)
 - `/vibe default <theme>`, `/vibe project <theme>`, `/vibe off`, `/vibe status`, `/vibe refresh`
 - Works in the Claude Code CLI too (list, switch, save picks); scenes are drawn by the Claude desktop app

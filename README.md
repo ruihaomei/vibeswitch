@@ -44,7 +44,17 @@ The first installs Anthropic's official scenes; the second installs VibeSwitch. 
 **Then:**
 
 1. Open the **Claude desktop app → Code tab** and start a **new session**.
-2. Type **`/vibe`** and pick a number. Done.
+2. Type **`/vibe`**. The gallery opens beside the chat: click a picture's **Preview**. Done.
+
+## No commands to remember
+
+| You want to… | Do this |
+|---|---|
+| Browse and pick | Type `/vibe` and press Enter. The gallery opens with every scene's picture, **Preview** (this session), **Default** (every session) and **Project** (this folder) buttons, plus **Surprise me**, **Undo session pick** and **Original look**. |
+| Describe a mood | Just ask Claude: *"switch to something dark and calm"*, *"换成下雨的那个"*, *"keep the koi one for this project"*. VibeSwitch gives Claude a `vibe` tool for this; it waits behind tool search, so it costs almost nothing until you ask. |
+| Type a little | After `/vibe ` the prompt box suggests actions and scenes. Mood words work too: `rain`, `night`, `paper`, `koi`. |
+
+The commands below still work exactly as before, for people who like them.
 
 <p align="center"><img src="docs/reel.gif" alt="A few of the official scenes, animated" width="720"></p>
 
@@ -62,7 +72,7 @@ The first installs Anthropic's official scenes; the second installs VibeSwitch. 
 
 | Command | What happens |
 |---|---|
-| `/vibe` | Numbered list, grouped by mood |
+| `/vibe` | Gallery in the desktop app; numbered list in a terminal |
 | `/vibe <number or name>` | Use it in this session |
 | `/vibe preview` | Gallery pane with real previews and buttons |
 | `/vibe default <theme>` | Use it everywhere, from now on |
@@ -153,6 +163,7 @@ The installed plugin is the [`plugin/`](plugin) folder: a hooks module, 40 previ
 | **Writes** | `~/.config/vibeswitch/config.json` (your default and per-project picks). Nothing else. |
 | **Reads** | Its own files; that config; Claude Code's plugin records (`~/.claude/plugins/installed_plugins.json`, `known_marketplaces.json`). If Backdrops is installed **from its own marketplace** (`neverblinks/backdrops`), its preview stills are read as text from its `hooks/photos.ts`; nothing in that file is imported or run. |
 | **Runs** | The chosen theme's own slash command (for example `/custom-theme night-reef session`), only for theme plugins in [`registry.ts`](plugin/hooks/registry.ts) and only plugin commands. |
+| **Adds** | One slash command, `/vibe`; one tool, `vibe`, that Claude calls when you ask for a scene in words (behind tool search; it can list, switch, show status or open the gallery, and keeps a pick for the project or every session only when you ask); suggestions in the prompt box after `/vibe `. |
 | **Holds back** | Backdrop changes from the other registered theme plugins, so one scene shows at a time. |
 
 [`tools/thumbs.mjs`](tools/thumbs.mjs) is a maintainer script that made the stills. It is not part of the installed plugin, and `/vibe` never runs it.

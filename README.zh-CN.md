@@ -36,7 +36,17 @@ claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch
 **然后：**
 
 1. 打开 **Claude 桌面版 → Code 标签页**，**新建一个会话**。
-2. 输入 **`/vibe`**，选一个编号。完成。
+2. 输入 **`/vibe`** 回车，旁边会打开画廊：点任意一张图的 **预览（Preview）**。完成。
+
+## 不用背命令
+
+| 你想… | 这样做 |
+|---|---|
+| 看图挑选 | 输入 `/vibe` 回车，画廊打开：每个场景都有画面，按钮有 **Preview**（本会话）、**Default**（所有会话）、**Project**（这个文件夹），还有 **Surprise me**（随机来一个）、撤销、恢复原样。 |
+| 直接说想要的感觉 | 直接跟 Claude 说：*"换个安静一点的夜景"*、*"换成下雨的那个"*、*"这个项目就用锦鲤那款"*。VibeSwitch 为此给 Claude 提供了一个 `vibe` 工具，平时藏在工具搜索后面，几乎不占上下文。 |
+| 少打几个字 | 输入 `/vibe ` 后，输入框会提示可用的操作和场景，用英文氛围词也行：`rain`、`night`、`paper`、`koi`。 |
+
+下面的命令照常可用，喜欢命令的人不受影响。
 
 <p align="center"><img src="docs/reel.gif" alt="部分官方场景的动态效果" width="720"></p>
 
@@ -54,7 +64,7 @@ claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch
 
 | 命令 | 效果 |
 |---|---|
-| `/vibe` | 按氛围分组的编号列表 |
+| `/vibe` | 桌面版打开画廊；终端里显示编号列表 |
 | `/vibe <编号或名字>` | 本会话使用 |
 | `/vibe preview` | 打开带预览和按钮的画廊 |
 | `/vibe default <主题>` | 以后所有会话都用它 |
