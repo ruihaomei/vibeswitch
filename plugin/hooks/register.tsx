@@ -14,9 +14,9 @@
 // the session override lives in $.state and ends with the session.
 
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, Register } from 'claude-code'
+import type { CommandInfo, EngineInterface, Register } from 'claude-code'
 
-import { CARD, forgetArtwork, loadArtwork, peekArtwork, thumbsDir } from './artwork'
+import { CARD, forgetArtwork, loadArtwork, peekArtwork } from './artwork'
 import { mayDraw, NONE, providerKeyOfPlugin } from './gate'
 import { previewSvg } from './preview'
 import { CATEGORIES, PROVIDERS, THEMES, type Category, type Provider, type Theme } from './registry'
@@ -104,9 +104,12 @@ async function resolve($: EngineInterface): Promise<Resolved | undefined> {
 
 // ---------- activation ----------
 
+/** A provider's command: a plugin command of that name, from that plugin wherever the engine says which. */
+const isProviderCommand = (c: CommandInfo, p: Provider): boolean =>
+  c.source === 'plugin' && c.name === p.command && (c.plugin === undefined || c.plugin === p.plugin)
+
 async function commandExists($: EngineInterface, provider: Provider): Promise<boolean> {
-  const commands = await $.command.list()
-  return commands.some(c => c.name === provider.command && (c.plugin === undefined || c.plugin === provider.plugin))
+  return (await $.command.list()).some(c => isProviderCommand(c, provider))
 }
 
 /** Shows the resolved theme now. Returns a problem line, or undefined when it went through. */
@@ -132,7 +135,7 @@ async function loadedProviders($: EngineInterface): Promise<string[]> {
   const commands = await $.command.list()
   return Object.keys(PROVIDERS).filter(key => {
     const p = PROVIDERS[key]
-    return p !== undefined && commands.some(c => c.name === p.command && (c.plugin === undefined || c.plugin === p.plugin))
+    return p !== undefined && commands.some(c => isProviderCommand(c, p))
   })
 }
 
@@ -189,7 +192,6 @@ async function menuText($: EngineInterface, header: string, withBlurbs: boolean)
   return lines.join('\n')
 }
 
-/** Opens the gallery pane; says so, or why no window shows it. */
 /** Opens the gallery without waiting for its first draw; a pane that is not placed says why in a toast. */
 async function openGallery($: EngineInterface): Promise<string> {
   void $.ui.open({ id: GALLERY, title: 'Themes', focus: true })
@@ -226,18 +228,7 @@ async function refresh($: EngineInterface): Promise<string> {
     added.length > 0 ? `New: ${added.join(', ')}.` : 'Nothing new.',
     removed.length > 0 ? `No longer loaded: ${removed.join(', ')}.` : '',
     'A theme plugin not in hooks/registry.ts needs a registry entry before it can be switched.',
-    'Remaking the gallery previews from the installed themes in the background (about half a minute).',
   ].filter(Boolean).join('\n')
-}
-
-/** Remakes the gallery's stills with tools/thumbs.mjs (Node and Chrome on this machine); says how it went. */
-async function remakeArtwork($: EngineInterface): Promise<string> {
-  let node = 'node'
-  for (const p of ['/opt/homebrew/bin/node', '/usr/local/bin/node']) if (await $.fs.exists(p)) { node = p; break }
-  const run = await $.process.run([node, '--no-warnings', `${$.plugin.root}/tools/thumbs.mjs`], { cwd: await thumbsDir($).then(d => d.replace(/\/thumbs$/, '')).catch(() => undefined), timeoutMs: 300000 })
-  forgetArtwork()
-  const said = (run.stdout.trim() || run.stderr.trim()).split('\n').pop() ?? ''
-  return run.exitCode === 0 ? `VibeSwitch: ${said}` : `VibeSwitch: previews not remade (${said || `exit ${run.exitCode}`})`
 }
 
 // ---------- changing a layer ----------
@@ -342,11 +333,8 @@ export const register: Register = on => {
     if (head === 'preview' || head === 'gallery') return { text: await openGallery($) }
     if (head === 'status') return { text: await statusText($) }
     if (head === 'refresh') {
-      const text = await refresh($)
-      $.clock.after(1, () => {
-        void remakeArtwork($).then(line => $.ui.toast(line)).catch(err => $.ui.toast(`VibeSwitch: previews not remade (${String(err)})`))
-      })
-      return { text }
+      forgetArtwork()
+      return { text: await refresh($) }
     }
     if (head === 'off') return { text: await setLayer($, 'session', NONE) }
 

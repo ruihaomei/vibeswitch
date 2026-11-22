@@ -70,7 +70,7 @@ The first installs Anthropic's official scenes; the second installs VibeSwitch. 
 | `/vibe session inherit` · `project inherit` | Undo that override |
 | `/vibe off` | Back to the plain app look for this session |
 | `/vibe status` | What's showing and why |
-| `/vibe refresh` | Re-detect theme plugins and rebuild previews |
+| `/vibe refresh` | Re-detect installed theme plugins |
 
 <p align="center"><img src="docs/terminal.webp" alt="Real /vibe output: themes grouped and numbered, then switching to Night Reef" width="640"></p>
 
@@ -105,7 +105,7 @@ VibeSwitch already knows these three and adds them to `/vibe` and the gallery as
 | [Garden](https://github.com/cktang88/claude-garden-theme): cream paper with live session dials | `claude plugin install garden-theme --marketplace cktang88/claude-garden-theme` |
 | [Backdrops](https://github.com/neverblinks/backdrops): nine cinematic dusk & night scenes | `claude plugin install backdrops --marketplace neverblinks/backdrops` |
 
-Run `/vibe refresh` after installing. A theme plugin VibeSwitch doesn't know yet keeps working through its own command; adding it to `/vibe` is one entry in [`hooks/registry.ts`](hooks/registry.ts) (PRs welcome).
+Run `/vibe refresh` after installing. A theme plugin VibeSwitch doesn't know yet keeps working through its own command; adding it to `/vibe` is one entry in [`plugin/hooks/registry.ts`](plugin/hooks/registry.ts) (PRs welcome).
 
 ## FAQ
 
@@ -131,7 +131,7 @@ Scenes are drawn by the **Claude desktop app's Code tab**. Start a **new** sessi
 
 <details><summary><b>Does it slow anything down or phone home?</b></summary>
 
-No. It runs only when a session starts or when you use `/vibe`, reads and writes one config file, and makes no network calls. Gallery previews are small stills (about 4 KB each) shipped with the plugin.
+No. It runs only when a session starts or when you use `/vibe`, reads and writes one config file, and makes no network calls. Gallery previews are small stills (about 4 KB each) shipped with the plugin. See [What VibeSwitch touches](#what-vibeswitch-touches).
 </details>
 
 <details><summary><b>Some scenes make sound.</b></summary>
@@ -141,13 +141,27 @@ Koi Pond and Falling Sand (♪) have optional sound from the official plugin. Pi
 
 <details><summary><b>How do I uninstall?</b></summary>
 
-`claude plugin uninstall vibeswitch`. Delete `~/.config/vibeswitch` and `~/.cache/vibeswitch` if you want no trace.
+`claude plugin uninstall vibeswitch`. Delete `~/.config/vibeswitch` if you want no trace (and `~/.cache/vibeswitch`, which only version 1.0 wrote).
 </details>
+
+## What VibeSwitch touches
+
+The installed plugin is the [`plugin/`](plugin) folder: a hooks module, 40 preview stills (about 160 KB) and their licences. It never starts a program, never imports or runs another plugin's code, and makes no network calls.
+
+| | |
+|---|---|
+| **Writes** | `~/.config/vibeswitch/config.json` (your default and per-project picks). Nothing else. |
+| **Reads** | Its own files; that config; Claude Code's plugin records (`~/.claude/plugins/installed_plugins.json`, `known_marketplaces.json`). If Backdrops is installed **from its own marketplace** (`neverblinks/backdrops`), its preview stills are read as text from its `hooks/photos.ts`; nothing in that file is imported or run. |
+| **Runs** | The chosen theme's own slash command (for example `/custom-theme night-reef session`), only for theme plugins in [`registry.ts`](plugin/hooks/registry.ts) and only plugin commands. |
+| **Holds back** | Backdrop changes from the other registered theme plugins, so one scene shows at a time. |
+
+[`tools/thumbs.mjs`](tools/thumbs.mjs) is a maintainer script that made the stills. It is not part of the installed plugin, and `/vibe` never runs it.
 
 ## Credits
 
 - Scenes and their artwork: Anthropic's [theme-examples](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples) plugin (Apache-2.0). The previews in this repo are single frames of those scenes, scaled down; see [NOTICE](NOTICE).
-- Third-party themes belong to their authors and are never copied here.
+- Rainy Window (© Ishu Agrawal) and Garden (© cktang88) previews: single frames of those MIT-licensed themes, scaled down, with their licences in [`plugin/assets/thumbs`](plugin/assets/thumbs).
+- Backdrops' artwork is not redistributed: where Backdrops is installed, its own previews are read in place.
 - VibeSwitch code: MIT © ruihaomei.
 
 <p align="center"><b>If VibeSwitch made your workspace a little nicer, a ⭐ helps other people find it.</b></p>

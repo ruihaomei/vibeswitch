@@ -62,7 +62,7 @@ claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch
 | `/vibe session inherit` · `project inherit` | 撤销对应层的选择 |
 | `/vibe off` | 本会话恢复原始外观 |
 | `/vibe status` | 现在显示什么、为什么 |
-| `/vibe refresh` | 重新识别主题插件并重建预览 |
+| `/vibe refresh` | 重新识别已安装的主题插件 |
 
 <p align="center"><img src="docs/scenes.webp" alt="38 款官方场景在画廊中的样子" width="100%"></p>
 
@@ -79,11 +79,11 @@ claude plugin install vibeswitch --marketplace ruihaomei/vibeswitch
 ## 常见问题
 
 - **输入 `/vibe` 没变化？** 场景由 Claude 桌面版的 Code 标签页绘制。安装后请**新建会话**再试。
-- **会拖慢电脑或联网吗？** 不会。只在会话开始或你用 `/vibe` 时运行，不联网。
-- **怎么卸载？** `claude plugin uninstall vibeswitch`，再删掉 `~/.config/vibeswitch` 和 `~/.cache/vibeswitch`。
+- **会拖慢电脑或联网吗？** 不会。只在会话开始或你用 `/vibe` 时运行，不联网，不启动任何程序，也不执行其他插件的代码。详见英文 README 的 [What VibeSwitch touches](README.md#what-vibeswitch-touches)。
+- **怎么卸载？** `claude plugin uninstall vibeswitch`，再删掉 `~/.config/vibeswitch`（以及只有 1.0 版会写的 `~/.cache/vibeswitch`）。
 
 ## 致谢
 
-场景与画面来自 Anthropic 的 [theme-examples](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples) 插件（Apache-2.0），本仓库的预览图为其单帧缩略图，详见 [NOTICE](NOTICE)。VibeSwitch 代码以 MIT 协议开源。
+场景与画面来自 Anthropic 的 [theme-examples](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples) 插件（Apache-2.0），本仓库的预览图为其单帧缩略图，详见 [NOTICE](NOTICE)。Rainy Window 与 Garden 的预览图取自这两个 MIT 协议主题的单帧；Backdrops 的画面不随本插件分发，装了 Backdrops 时直接读取它自带的预览。VibeSwitch 代码以 MIT 协议开源。
 
 <p align="center"><b>如果 VibeSwitch 让你的工作台更好看了一点，点个 ⭐ 能帮更多人发现它。</b></p>

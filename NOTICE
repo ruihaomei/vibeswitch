@@ -1,15 +1,23 @@
 VibeSwitch
 Copyright (c) 2026 ruihaomei. Code licensed under the MIT License (LICENSE).
 
-This repository includes small still images (assets/thumbs/*.webp and docs/*)
+This repository includes small still images (plugin/assets/thumbs/*.webp and docs/*)
 rendered from the backdrop scenes of Anthropic's theme-examples plugin
 (https://github.com/anthropics/claude-plugins-official/tree/main/plugins/theme-examples),
 Copyright Anthropic, licensed under the Apache License 2.0
-(assets/thumbs/LICENSE-theme-examples.txt). They were changed only by capturing a
+(plugin/assets/thumbs/LICENSE-theme-examples.txt). They were changed only by capturing a
 single frame (or a few frames for the animated previews) and scaling it down.
 
-VibeSwitch does not include artwork from third-party theme plugins. Where such a
-plugin is installed, its own previews are read in place on the user's machine.
+It also includes one still each from two MIT-licensed theme plugins, made the same
+way and kept with their licences in plugin/assets/thumbs:
+- rainy-window.webp, from Rainy Window (https://github.com/ishuagrawal/claude-code-themes),
+  Copyright (c) 2026 Ishu Agrawal (LICENSE-rainy-window.txt);
+- garden.webp, the first frame of Garden's docs/preview.gif
+  (https://github.com/cktang88/claude-garden-theme), Copyright (c) 2026 cktang88
+  (LICENSE-garden.txt).
+
+VibeSwitch does not include Backdrops artwork (not for redistribution). Where Backdrops
+is installed, its own previews are read in place on the user's machine.
 
 The website in docs/ is built with taste-skill (https://github.com/Leonxlnx/taste-skill),
 MIT License; its kit files under docs/assets keep that licence (docs/assets/LICENSE-taste-skill.txt).

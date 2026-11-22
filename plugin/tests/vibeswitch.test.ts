@@ -6,12 +6,20 @@ import { THEMES } from '../hooks/registry'
 const CONFIG = '/home/t/.config/vibeswitch/config.json'
 
 // A stand-in engine: a file system in memory, the theme plugins' commands, and a log of what was set.
-function engine(on: any, files: Record<string, string>, log: { sets: string[]; runs: string[]; clears: number }) {
+// A key starting with '*' matches any path ending in the rest (for files under the plugin's own folder).
+function engine(on: any, files: Record<string, string>, log: { sets: string[]; runs: string[]; clears: number }, reads: string[] = [], commands?: object[]) {
+  const key = (path: string) => (path in files ? path : Object.keys(files).find(k => k.startsWith('*') && path.endsWith(k.slice(1))))
+  const at = (path: string) => {
+    const k = key(path)
+    if (k === undefined) throw new Error(`ENOENT ${path}`)
+    return files[k]!
+  }
   on('env.get', () => ({ value: '/home/t' }))
-  on('fs.exists', (_: any, e: any) => ({ value: e.path in files }))
+  on('fs.exists', (_: any, e: any) => ({ value: key(e.path) !== undefined }))
+  on('fs.stat', (_: any, e: any) => ({ value: { kind: 'file', size: at(e.path).length } }))
   on('fs.read', (_: any, e: any) => {
-    if (!(e.path in files)) throw new Error(`ENOENT ${e.path}`)
-    return { value: e.as === 'bytes' ? { base64: files[e.path] } : files[e.path] }
+    reads.push(e.path)
+    return { value: e.as === 'bytes' ? { base64: at(e.path) } : at(e.path) }
   })
   on('fs.write', (_: any, e: any) => {
     files[e.path] = e.text
@@ -20,7 +28,7 @@ function engine(on: any, files: Record<string, string>, log: { sets: string[]; r
   on('session.root', () => ({ value: '/proj/a' }))
   on('command.register', () => ({ value: { command: 'vibe' } }))
   on('command.list', () => ({
-    value: [
+    value: commands ?? [
       { name: 'rainy-window', description: '', source: 'plugin', plugin: 'rainy-window' },
       { name: 'garden', description: '', source: 'plugin', plugin: 'garden-theme' },
       { name: 'backdrops', description: '', source: 'plugin', plugin: 'backdrops' },
@@ -171,28 +179,72 @@ test('the gallery pane draws a preview per theme and Preview applies it', async 
   await ui.unmount()
 })
 
-test('the gallery shows installed artwork where there is some and the color card elsewhere', async ($, on) => {
-  const files: Record<string, string> = {
-    '/home/t/.claude/plugins/installed_plugins.json': JSON.stringify({ plugins: { 'backdrops@backdrops': [{ installPath: '/bd' }] } }),
-    '/bd/hooks/photos.ts': `export const PHOTOS = {\n  "reaching": 'data:image/webp;base64,UkVBQ0g=',\n}`,
-    '/home/t/.cache/vibeswitch/thumbs/koi-pond.webp': 'S09J',
-  }
-  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
-  engine(on, files, log)
-  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
-  const ui = await $.ui.mount({
-    plugin: 'vibeswitch', component: 'Pane', requestId: 'vibeswitch-gallery', surface: 'desktop',
-    props: { title: 'Themes', isFocused: true, bodyColumns: 80, placement: 'dock', scroll: { offset: 0, bodyRows: 40 }, view: {} },
-  } as any)
-  // The first draw is color cards; the pictures arrive in a second draw.
-  expect((await ui.findAll({ type: 'Svg' })).length).toBe(49)
+const pane = {
+  plugin: 'vibeswitch', component: 'Pane', requestId: 'vibeswitch-gallery', surface: 'desktop',
+  props: { title: 'Themes', isFocused: true, bodyColumns: 80, placement: 'dock', scroll: { offset: 0, bodyRows: 40 }, view: {} },
+}
+const records = (backdropsKey: string, repo: string) => ({
+  '/home/t/.claude/plugins/installed_plugins.json': JSON.stringify({ plugins: { [backdropsKey]: [{ installPath: '/home/t/.claude/plugins/cache/bd' }] } }),
+  '/home/t/.claude/plugins/known_marketplaces.json': JSON.stringify({ [backdropsKey.split('@')[1]!]: { source: { source: 'github', repo } } }),
+  '/home/t/.claude/plugins/cache/bd/hooks/photos.ts': `export const PHOTOS = {\n  "reaching": 'data:image/webp;base64,UkVBQ0g=',\n}`,
+})
+const drawn = async ($: any) => {
+  const ui = await $.ui.mount(pane as any)
   await new Promise(r => (globalThis as any).setTimeout(r, 50))
   const svgs = await ui.findAll({ type: 'Svg' })
-  const sources = svgs.map((s: any) => String(s.props.source))
+  await ui.unmount()
+  return svgs
+}
+
+test('the gallery shows the shipped stills and Backdrops\' own, and the color card elsewhere', async ($, on) => {
+  const files: Record<string, string> = { ...records('backdrops@backdrops', 'neverblinks/backdrops'), '*/assets/thumbs/koi-pond.webp': 'S09J' }
+  const reads: string[] = []
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
+  engine(on, files, log, reads)
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount(pane as any)
+  // The first draw is color cards; the pictures arrive in a second draw.
+  expect((await ui.findAll({ type: 'Svg' })).length).toBe(49)
+  await ui.unmount()
+  const svgs = await drawn($)
+  const sources: string[] = svgs.map((s: any) => String(s.props.source))
   expect(svgs.length).toBe(49)
   expect(sources.filter(s => s.includes('<image href="data:')).length).toBe(2)
   expect(sources.some(s => s.includes('data:image/webp;base64,UkVBQ0g='))).toBe(true)
   expect(sources.some(s => s.includes('data:image/webp;base64,S09J'))).toBe(true)
   expect(svgs.every((s: any) => s.props.width === 144 && s.props.height === 81)).toBe(true)
-  await ui.unmount()
+  expect(reads.some(p => p.includes('/.cache/'))).toBe(false)
+})
+
+test('a plugin named backdrops from another marketplace is never read', async ($, on) => {
+  const files: Record<string, string> = records('backdrops@lookalike', 'someone/backdrops')
+  const reads: string[] = []
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
+  engine(on, files, log, reads)
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  const sources: string[] = (await drawn($)).map((s: any) => String(s.props.source))
+  expect(sources.some(s => s.includes('UkVBQ0g='))).toBe(false)
+  expect(reads.some(p => p.endsWith('/photos.ts'))).toBe(false)
+})
+
+test('a same-named command that is not a plugin command is never run', async ($, on) => {
+  const files: Record<string, string> = {}
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
+  engine(on, files, log, [], [{ name: 'custom-theme', description: '', source: 'user' }])
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  expect(await run($, 'night reef')).toContain('No theme')
+  expect(await run($, 'refresh')).toContain('Registered 0 provider(s)')
+  expect(log.runs.filter(r => r.startsWith('/custom-theme'))).toEqual([])
+})
+
+test('nothing VibeSwitch does starts a process', async ($, on) => {
+  const files: Record<string, string> = {}
+  const log = { sets: [] as string[], runs: [] as string[], clears: 0 }
+  engine(on, files, log)
+  const spawned: string[] = []
+  on('process.run', (_: any, e: any) => { spawned.push(String(e.argv)); return { deny: 'not in tests' } as any })
+  await $.session.start({ cwd: '/proj/a', surface: 'desktop', isInteractive: true })
+  for (const args of ['', 'list', 'refresh', 'preview', 'status', 'night reef', 'default koi mosaic', 'project garden', 'off']) await run($, args)
+  await new Promise(r => (globalThis as any).setTimeout(r, 1100))
+  expect(spawned).toEqual([])
 })

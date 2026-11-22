@@ -63,10 +63,11 @@ It should print themes grouped as "Light & paper", "Night & dark" and "Interacti
 | `Plugin "vibeswitch" not found` | Run `claude plugin marketplace update vibeswitch`, then install again. |
 | `/vibe` is an unknown command | The session was open before install. Start a new session. |
 | The list shows themes but nothing changes on screen | Scenes appear only in the desktop app's Code tab, not in a plain terminal. |
-| The person wants it gone | `claude plugin uninstall vibeswitch`, then delete `~/.config/vibeswitch` and `~/.cache/vibeswitch`. |
+| The person wants it gone | `claude plugin uninstall vibeswitch`, then delete `~/.config/vibeswitch` (and `~/.cache/vibeswitch` if version 1.0 made one). |
 
 ## Facts you can rely on
 
 - Command: `/vibe`. Config: `~/.config/vibeswitch/config.json` (`default`, `projects`). Priority: session > project > default.
 - `inherit` removes an override; `none` / `/vibe off` shows no scene.
-- No network calls, no background process, no telemetry.
+- No network calls, no background process, no telemetry. It never starts a program and never imports or runs another plugin's code.
+- It writes only `~/.config/vibeswitch/config.json`. Gallery previews ship with the plugin; Backdrops' previews are read in place, as text, only when Backdrops came from `neverblinks/backdrops`.

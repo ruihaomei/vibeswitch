@@ -1,6 +1,6 @@
 {
   "name": "vibeswitch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Switch the scene behind your Claude Code desktop chat in one command: Anthropic's 38 official animated themes, a gallery with real previews, and default / per-project / per-session picks. Local, no daemon, no server.",
   "author": { "name": "ruihaomei", "url": "https://github.com/ruihaomei" },
   "homepage": "https://github.com/ruihaomei/vibeswitch",
